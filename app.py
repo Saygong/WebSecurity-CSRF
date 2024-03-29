@@ -34,6 +34,15 @@ def authorize_user():
     if "current_user" not in session:
         raise Unauthorized
 
+def check_csrf_token(token):
+    if token not in CSRF_TOKENS:
+        raise MissinCSRFToken
+    CSRF_TOKENS.remove(token)
+
+def validate_request():
+    authorize_user()
+    check_csrf_token(request.form["csrf"])
+
 def get_current_user():
     username = session.get("current_user")
     return user_repository.get_by_username(username)
@@ -60,15 +69,10 @@ def check_blog(blog_id):
 
 @app.route("/blog/<blog_id>/comment", methods=["POST"], host=VULNERABLE_DOMAIN)
 def post_comment(blog_id):
-    authorize_user()
-    csrf = request.form["csrf"]
-    if(csrf in CSRF_TOKENS):    
-        CSRF_TOKENS.remove(csrf)
-        new_comment = request.form["comment"]
-        blog_repository.post_comment_on_blog(blog_id, new_comment)
-        return redirect(url_for('check_blog', blog_id=blog_id) )
-    else:
-        raise MissinCSRFToken
+    validate_request()
+    new_comment = request.form["comment"]
+    blog_repository.post_comment_on_blog(blog_id, new_comment)
+    return redirect(url_for('check_blog', blog_id=blog_id) )
 
 
 @app.route("/login", methods=["GET"], host=VULNERABLE_DOMAIN)
@@ -77,6 +81,10 @@ def login():
         return redirect(url_for("index"))
     return render_template("login.j2")
 
+@app.route("/profile/update-email", methods=["POST"], host=VULNERABLE_DOMAIN)
+def change_email():
+    validate_request()
+    get_current_user().change_email(request.form)
 
 @app.route("/login", methods=["POST"], host=VULNERABLE_DOMAIN)
 def login_post():
