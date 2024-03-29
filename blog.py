@@ -5,20 +5,21 @@ class Blog:
         self.description = description
         self.comments = comments
 
-    def append_comment(self, comment):
-        self.comments.append(comment)
-
 class BlogRepository:
     def __init__(self, blogs):
         self.blogs = blogs
 
     def get_by_id(self, id):
         for blog in self.blogs:
-            print(blog)
+            
             if(blog.id == id):
                 return blog
+
+    def post_comment_on_blog(self, id, comment):
+        for blog in self.blogs:
             
-        raise KeyError
+            if(blog.id == id):
+                blog.comments.append(comment)
 
 
 blog_repository = BlogRepository(

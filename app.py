@@ -22,8 +22,17 @@ app = Flask(__name__, host_matching=True, static_host=VULNERABLE_DOMAIN)
 app.secret_key = "impossible_to_guess"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 
+class Unauthorized(Exception):
+    "Unauthorized User"
+    pass
 
+class MissinCSRFToken(Exception):
+    "Missing CSRF"
+    pass
 
+def authorize_user():
+    if "current_user" not in session:
+        raise Unauthorized
 
 def get_current_user():
     username = session.get("current_user")
@@ -37,32 +46,29 @@ def inject_user():
 
 @app.route("/", host=VULNERABLE_DOMAIN)
 def index():
-    
     return render_template("index.j2", blogs=blog_repository.blogs)
 
 
 @app.route("/blog/<blog_id>", host=VULNERABLE_DOMAIN)
 def check_blog(blog_id):
+    authorize_user()
     generated_csrf = ''.join(random.choices(string.ascii_letters, k=30))
     CSRF_TOKENS.append(generated_csrf)
     selected_blog = blog_repository.get_by_id(blog_id)
-    
     return render_template("blog.j2", csrf_token=generated_csrf, blog=selected_blog)
 
 
 @app.route("/blog/<blog_id>/comment", methods=["POST"], host=VULNERABLE_DOMAIN)
 def post_comment(blog_id):
+    authorize_user()
     csrf = request.form["csrf"]
-    new_blog = request.form["comment"]
-
-
     if(csrf in CSRF_TOKENS):    
         CSRF_TOKENS.remove(csrf)
-        selected_blog = blog_repository.get_by_id(blog_id)
-        #logic to post a comment
-
-    return redirect(url_for('check_blog', blog_id=blog_id) )
-
+        new_comment = request.form["comment"]
+        blog_repository.post_comment_on_blog(blog_id, new_comment)
+        return redirect(url_for('check_blog', blog_id=blog_id) )
+    else:
+        raise MissinCSRFToken
 
 
 @app.route("/login", methods=["GET"], host=VULNERABLE_DOMAIN)
@@ -93,10 +99,8 @@ def logout():
 
 
 
-
-
+#Attacker Side 
 requests_log = []
-
 
 @app.route("/leak.html", host=ATTACKER_DOMAIN)
 def leak():
@@ -108,9 +112,6 @@ def leak():
 @app.route("/", host=ATTACKER_DOMAIN)
 def evil_index():
     return send_from_directory("evil-static", "index.html")
-
-
-
 
 
 @app.route("/<path:path>", host=ATTACKER_DOMAIN)
