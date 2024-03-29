@@ -38,26 +38,30 @@ def inject_user():
 @app.route("/", host=VULNERABLE_DOMAIN)
 def index():
     
-    return render_template("index.j2", all_blogs=blog_repository)
+    return render_template("index.j2", blogs=blog_repository.blogs)
 
 
-@app.route("/post/post_id", host=VULNERABLE_DOMAIN)
-def check_post():
-    csrf = request.form["csrf"]
+@app.route("/blog/<blog_id>", host=VULNERABLE_DOMAIN)
+def check_blog(blog_id):
+    generated_csrf = ''.join(random.choices(string.ascii_letters, k=30))
+    CSRF_TOKENS.append(generated_csrf)
+    selected_blog = blog_repository.get_by_id(blog_id)
     
-    if(csrf in CSRF_TOKENS):
-        CSRF_TOKENS.remove(csrf)
+    return render_template("blog.j2", csrf_token=generated_csrf, blog=selected_blog)
 
-    return redirect(url_for("index"))
 
-@app.route("/post/post_id/comment", methods=["POST"], host=VULNERABLE_DOMAIN)
-def check_post():
+@app.route("/blog/<blog_id>/comment", methods=["POST"], host=VULNERABLE_DOMAIN)
+def post_comment(blog_id):
     csrf = request.form["csrf"]
     new_blog = request.form["comment"]
-    if(csrf in CSRF_TOKENS):
-        CSRF_TOKENS.remove(csrf)
 
-    return redirect(url_for("index"))
+
+    if(csrf in CSRF_TOKENS):    
+        CSRF_TOKENS.remove(csrf)
+        selected_blog = blog_repository.get_by_id(blog_id)
+        #logic to post a comment
+
+    return redirect(url_for('check_blog', blog_id=blog_id) )
 
 
 

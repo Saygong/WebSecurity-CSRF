@@ -1,17 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Blogs</title>
-</head>
-<body>
-    <h1>Blogs</h1
-    <ul>
-      {% for blog in blogs %}
-      <a href="{{ url_for("login") }}" class="btn btn-outline-light ml-2">
-        <li>{{ blog.title }}</li>
-      </a>
+{% extends "base.j2" %}
+{% block title %}
+  	Home
+{% endblock title %}
+{% block header %}
+  	<h2>Home</h2>
+{% endblock header %}
+{% block content %}
+  	{% if current_user %}
+    	<h1>Blog: {{ blog.title }}</h1>
+      <p>
+        {{ blog.description }}
+      </p>
+      <h3>Comments:</h3>
+
+      <ul>
+      {% for comment in blog.comments %}
+        <li>{{ comment }}</li>
       {% endfor %}
-    </ul>
-</body>
-</html>
+      </ul>
+      <hr>
+      <div>
+			<form action="{{ url_for('post_comment', blog_id=blog.id) }}" method="POST">
+				<input required="" type="hidden" name="csrf" value="{{ csrf_token }}">
+				
+        <label>Your Name:</label><br>
+				<input required="" type="text" name="name">
+        <br>
+        <label>Your Comment:</label><br>
+				<textarea required="" rows="12" cols="30" name="comment"></textarea>
+				<br>		
+				<input class="button" type="submit" value="Post!">
+
+
+
+
+			</form>
+    	</div>
+
+  	{% else %}
+    	<div>Log in!</div>
+  	{% endif %}
+{% endblock content %}
