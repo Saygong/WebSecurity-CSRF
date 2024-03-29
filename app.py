@@ -15,7 +15,7 @@ ATTACKER_DOMAIN = "www.attacker.com:5000"
 
 app = Flask(__name__, host_matching=True, static_host=VULNERABLE_DOMAIN)
 app.secret_key = "impossible_to_guess"
-app.config["SESSION_COOKIE_HTTPONLY"] = False
+app.config["SESSION_COOKIE_HTTPONLY"] = True
 
 
 def get_current_user():
