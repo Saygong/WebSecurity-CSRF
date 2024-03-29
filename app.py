@@ -9,13 +9,20 @@ from flask import (
     url_for,
 )
 from user import user_repository
+import string
+import random
+
 
 VULNERABLE_DOMAIN = "www.vulnerable.com:5000"
 ATTACKER_DOMAIN = "www.attacker.com:5000"
+CSRF_TOKENS = []
+
 
 app = Flask(__name__, host_matching=True, static_host=VULNERABLE_DOMAIN)
 app.secret_key = "impossible_to_guess"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
+
+
 
 
 def get_current_user():
@@ -30,7 +37,18 @@ def inject_user():
 
 @app.route("/", host=VULNERABLE_DOMAIN)
 def index():
-    return render_template("index.j2")
+    generated_csrf = ''.join(random.choices(string.ascii_letters, k=30))
+    CSRF_TOKENS.append(generated_csrf)
+    return render_template("index.j2", csrf_token=generated_csrf)
+
+@app.route("/post", methods=["POST"], host=VULNERABLE_DOMAIN)
+def check_post():
+    csrf = request.form["csrf"]
+    new_blog = request.form["comment"]
+    if(csrf in CSRF_TOKENS):
+        CSRF_TOKENS.remove(csrf)
+
+    return render_template("index.j2", csrf_token=generated_csrf)
 
 
 @app.route("/login", methods=["GET"], host=VULNERABLE_DOMAIN)
@@ -60,6 +78,9 @@ def logout():
     return redirect(url_for("index"))
 
 
+
+
+
 requests_log = []
 
 
@@ -73,6 +94,9 @@ def leak():
 @app.route("/", host=ATTACKER_DOMAIN)
 def evil_index():
     return send_from_directory("evil-static", "index.html")
+
+
+
 
 
 @app.route("/<path:path>", host=ATTACKER_DOMAIN)
