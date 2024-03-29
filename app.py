@@ -11,12 +11,12 @@ from flask import (
 from user import user_repository
 import string
 import random
-
+from blog import blog_repository
 
 VULNERABLE_DOMAIN = "www.vulnerable.com:5000"
 ATTACKER_DOMAIN = "www.attacker.com:5000"
 CSRF_TOKENS = []
-
+POSTS = []
 
 app = Flask(__name__, host_matching=True, static_host=VULNERABLE_DOMAIN)
 app.secret_key = "impossible_to_guess"
@@ -37,18 +37,28 @@ def inject_user():
 
 @app.route("/", host=VULNERABLE_DOMAIN)
 def index():
-    generated_csrf = ''.join(random.choices(string.ascii_letters, k=30))
-    CSRF_TOKENS.append(generated_csrf)
-    return render_template("index.j2", csrf_token=generated_csrf)
+    
+    return render_template("index.j2", all_blogs=blog_repository)
 
-@app.route("/post", methods=["POST"], host=VULNERABLE_DOMAIN)
+
+@app.route("/post/post_id", host=VULNERABLE_DOMAIN)
+def check_post():
+    csrf = request.form["csrf"]
+    
+    if(csrf in CSRF_TOKENS):
+        CSRF_TOKENS.remove(csrf)
+
+    return redirect(url_for("index"))
+
+@app.route("/post/post_id/comment", methods=["POST"], host=VULNERABLE_DOMAIN)
 def check_post():
     csrf = request.form["csrf"]
     new_blog = request.form["comment"]
     if(csrf in CSRF_TOKENS):
         CSRF_TOKENS.remove(csrf)
 
-    return render_template("index.j2", csrf_token=generated_csrf)
+    return redirect(url_for("index"))
+
 
 
 @app.route("/login", methods=["GET"], host=VULNERABLE_DOMAIN)
