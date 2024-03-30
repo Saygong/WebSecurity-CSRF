@@ -7,13 +7,13 @@
 {% endblock header %}
 {% block content %}
   	{% if current_user %}
-    	<h1>Your account info: </h1>
+    	<h3>Your account info: </h3>
 		
 		
 		<ul class="list-group">
-            <li class="list-group-item">{{ user.username }}</li>
-            <li class="list-group-item">{{ user.secret }}</li>
-            <li class="list-group-item">{{ user.email }}</li>
+            <li class="list-group-item"><b>Username: </b>{{ user.username }}</li>
+            <li class="list-group-item"><b>User secret: </b>{{ user.secret }}</li>
+            <li class="list-group-item"><b>E-mail: </b>{{ user.email }}</li>
         </ul>
 		<br>
 		

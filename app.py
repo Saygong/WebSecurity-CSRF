@@ -64,8 +64,8 @@ def login():
 def change_email():
     AuthorizationHelper.validate_session()
     AuthorizationHelper.validate_token()
-    get_current_user().change_email(request.form)
-    return render_template("profile.j2", user=get_current_user())
+    get_current_user().change_email(request.form["email"])
+    return redirect(url_for("profile"))
 
 
 @app.route("/profile", methods=["GET"], host=VULNERABLE_DOMAIN)
@@ -98,7 +98,7 @@ def logout():
 requests_log = []
 
 
-@app.route("/leak.html", host=ATTACKER_DOMAIN)
+@app.route("/leak", host=ATTACKER_DOMAIN)
 def leak():
     global requests_log
     requests_log = requests_log + [f"{request.method} {request.url}"]
@@ -107,7 +107,7 @@ def leak():
 
 @app.route("/", host=ATTACKER_DOMAIN)
 def evil_index():
-    return send_from_directory("evil-static", "index.html")
+    return redirect("leak")
 
 
 @app.route("/<path:path>", host=ATTACKER_DOMAIN)
