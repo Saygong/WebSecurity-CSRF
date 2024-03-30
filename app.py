@@ -8,6 +8,8 @@ from flask import (
     session,
     url_for,
 )
+
+from authorization import AuthorizationHelper
 from user import user_repository
 import string
 import random
@@ -15,33 +17,12 @@ from blog import blog_repository
 
 VULNERABLE_DOMAIN = "www.vulnerable.com:5000"
 ATTACKER_DOMAIN = "www.attacker.com:5000"
-CSRF_TOKENS = []
 POSTS = []
 
 app = Flask(__name__, host_matching=True, static_host=VULNERABLE_DOMAIN)
 app.secret_key = "impossible_to_guess"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 
-class Unauthorized(Exception):
-    "Unauthorized User"
-    pass
-
-class MissinCSRFToken(Exception):
-    "Missing CSRF"
-    pass
-
-def authorize_user():
-    if "current_user" not in session:
-        raise Unauthorized
-
-def check_csrf_token(token):
-    if token not in CSRF_TOKENS:
-        raise MissinCSRFToken
-    CSRF_TOKENS.remove(token)
-
-def validate_request():
-    authorize_user()
-    check_csrf_token(request.form["csrf"])
 
 def get_current_user():
     username = session.get("current_user")
@@ -60,19 +41,17 @@ def index():
 
 @app.route("/blog/<blog_id>", host=VULNERABLE_DOMAIN)
 def check_blog(blog_id):
-    authorize_user()
-    generated_csrf = ''.join(random.choices(string.ascii_letters, k=30))
-    CSRF_TOKENS.append(generated_csrf)
+    AuthorizationHelper.validate(False)
     selected_blog = blog_repository.get_by_id(blog_id)
-    return render_template("blog.j2", csrf_token=generated_csrf, blog=selected_blog)
+    return render_template("blog.j2", csrf_token=AuthorizationHelper.generate_token(), blog=selected_blog)
 
 
 @app.route("/blog/<blog_id>/comment", methods=["POST"], host=VULNERABLE_DOMAIN)
 def post_comment(blog_id):
-    validate_request()
+    AuthorizationHelper.validate(True)
     new_comment = request.form["comment"]
     blog_repository.post_comment_on_blog(blog_id, new_comment)
-    return redirect(url_for('check_blog', blog_id=blog_id) )
+    return redirect(url_for('check_blog', blog_id=blog_id))
 
 
 @app.route("/login", methods=["GET"], host=VULNERABLE_DOMAIN)
@@ -81,10 +60,12 @@ def login():
         return redirect(url_for("index"))
     return render_template("login.j2")
 
+
 @app.route("/profile/update-email", methods=["POST"], host=VULNERABLE_DOMAIN)
 def change_email():
-    validate_request()
+    AuthorizationHelper.validate(True)
     get_current_user().change_email(request.form)
+
 
 @app.route("/login", methods=["POST"], host=VULNERABLE_DOMAIN)
 def login_post():
@@ -106,9 +87,9 @@ def logout():
     return redirect(url_for("index"))
 
 
-
-#Attacker Side -> Call https://www.attacker.com:5000/leak.html to log 
+# Attacker Side -> Call https://www.attacker.com:5000/leak.html to log
 requests_log = []
+
 
 @app.route("/leak.html", host=ATTACKER_DOMAIN)
 def leak():
