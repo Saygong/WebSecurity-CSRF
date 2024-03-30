@@ -8,8 +8,10 @@
   </head>
   <body>
     <h1>LEAK PAGE</h1>
-    <ul>
-      {% for request in requests_log %}<li>{{ request }}</li>{% endfor %}
+    <ul class="list-group">
+      {% for request in requests_log %}
+        <li class="list-group-item">{{ request }}</li>
+      {% endfor %}
     </ul>
   </body>
 </html>

