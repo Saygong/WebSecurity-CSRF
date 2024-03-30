@@ -1,0 +1,24 @@
+{% extends "base.j2" %}
+{% block title %}
+  	Profile
+{% endblock title %}
+{% block header %}
+  	<h2 style = "margin-bottom: 50px;">Your Profile</h2>
+{% endblock header %}
+{% block content %}
+  	{% if current_user %}
+    	<h1>Your account info: </h1>
+		
+		
+		<ul class="list-group">
+            <li class="list-group-item">{{ user.username }}</li>
+            <li class="list-group-item">{{ user.secret }}</li>
+            <li class="list-group-item">{{ user.email }}</li>
+        </ul>
+		<br>
+		
+		
+  	{% else %}
+    	<div>Log in!</div>
+  	{% endif %}
+{% endblock content %}

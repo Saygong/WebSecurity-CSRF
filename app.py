@@ -65,6 +65,14 @@ def login():
 def change_email():
     AuthorizationHelper.validate(True)
     get_current_user().change_email(request.form)
+    return render_template("profile.j2", user=get_current_user())
+
+
+@app.route("/profile", methods=["GET"], host=VULNERABLE_DOMAIN)
+def profile_page():
+    validate_request()
+    return render_template("profile.j2", user=get_current_user())
+
 
 
 @app.route("/login", methods=["POST"], host=VULNERABLE_DOMAIN)
