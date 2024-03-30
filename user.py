@@ -19,6 +19,10 @@ class UserRepository:
             None,
         )
 
+    def get_user(self, session):
+        username = session.get("current_user")
+        return self.get_by_username(username)
+
 
 user_repository = UserRepository(
     [

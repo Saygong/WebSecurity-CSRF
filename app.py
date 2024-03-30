@@ -9,7 +9,7 @@ from flask import (
     url_for,
 )
 
-from authorization import AuthorizationHelper
+from authorization import AuthorizationHelper, Unauthorized
 from user import user_repository
 from blog import blog_repository
 
@@ -22,14 +22,9 @@ app.secret_key = "impossible_to_guess"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 
 
-def get_current_user():
-    username = session.get("current_user")
-    return user_repository.get_by_username(username)
-
-
 @app.context_processor
 def inject_user():
-    return dict(current_user=get_current_user())
+    return dict(current_user=user_repository.get_user(session))
 
 
 @app.route("/", host=VULNERABLE_DOMAIN)
@@ -55,23 +50,27 @@ def post_comment(blog_id):
 
 @app.route("/login", methods=["GET"], host=VULNERABLE_DOMAIN)
 def login():
-    if "current_user" in session:
-        return redirect(url_for("index"))
-    return render_template("login.j2")
+    try:
+        AuthorizationHelper.validate_session()
+        redirect(url_for("index"))
+    except Unauthorized:
+        return render_template("login.j2")
 
 
 @app.route("/profile/update-email", methods=["POST"], host=VULNERABLE_DOMAIN)
 def change_email():
     AuthorizationHelper.validate_session()
     AuthorizationHelper.validate_token()
-    get_current_user().change_email(request.form["email"])
-    return redirect(url_for("profile"))
+
+    current_user = user_repository.get_user(session)
+    current_user.change_email(request.form)
+    return render_template("profile.j2", user=current_user)
 
 
 @app.route("/profile", methods=["GET"], host=VULNERABLE_DOMAIN)
 def profile():
     AuthorizationHelper.validate_session()
-    return render_template("profile.j2", user=get_current_user())
+    return render_template("profile.j2", user=user_repository.get_user(session))
 
 
 @app.route("/login", methods=["POST"], host=VULNERABLE_DOMAIN)

@@ -3,6 +3,8 @@ import string
 
 from flask import session, request
 
+from user import user_repository
+
 CSRF_TOKENS = []
 
 
