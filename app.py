@@ -11,8 +11,6 @@ from flask import (
 
 from authorization import AuthorizationHelper
 from user import user_repository
-import string
-import random
 from blog import blog_repository
 
 VULNERABLE_DOMAIN = "www.vulnerable.com:5000"
@@ -39,9 +37,9 @@ def index():
     return render_template("index.j2", blogs=blog_repository.blogs)
 
 
-@app.route("/blog/<blog_id>", host=VULNERABLE_DOMAIN)
+@app.route("/blog/<blog_id>", methods=["GET"], host=VULNERABLE_DOMAIN)
 def check_blog(blog_id):
-    AuthorizationHelper.validate(False)
+    #AuthorizationHelper.validate(False)
     selected_blog = blog_repository.get_by_id(blog_id)
     return render_template("blog.j2", csrf_token=AuthorizationHelper.generate_token(), blog=selected_blog)
 
@@ -69,8 +67,8 @@ def change_email():
 
 
 @app.route("/profile", methods=["GET"], host=VULNERABLE_DOMAIN)
-def profile_page():
-    validate_request()
+def profile():
+    #AuthorizationHelper.validate(False)
     return render_template("profile.j2", user=get_current_user())
 
 
