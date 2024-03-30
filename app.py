@@ -63,7 +63,7 @@ def change_email():
     AuthorizationHelper.validate_token()
 
     current_user = user_repository.get_user(session)
-    current_user.change_email(request.form)
+    current_user.change_email(request.form["email"])
     return render_template("profile.j2", user=current_user)
 
 

