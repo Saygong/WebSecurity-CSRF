@@ -3,19 +3,19 @@
   	Home
 {% endblock title %}
 {% block header %}
-  	<h2>Home</h2>
+  	<h2 style = "margin-bottom: 50px;">Home</h2>
 {% endblock header %}
 {% block content %}
   	{% if current_user %}
     	<h1>Blogs</h1>
-		<ul>
+		
 		{% for blog in blogs %}
-		<a href="{{ url_for('check_blog', blog_id=blog.id) }}" class="">
-			<li>{{ blog.title }}</li>
+		<a href="{{ url_for('check_blog', blog_id=blog.id) }}" >
+			<div class="alert alert-info">{{ blog.title }}</div>
 		</a>
 		<br>
 		{% endfor %}
-		</ul>
+		
   	{% else %}
     	<div>Log in!</div>
   	{% endif %}
