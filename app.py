@@ -64,7 +64,7 @@ def change_email():
 
     current_user = user_repository.get_user(session)
     current_user.change_email(request.form["email"])
-    return {}
+    return {"status": 200}
 
 
 @app.route("/profile", methods=["GET"], host=VULNERABLE_DOMAIN)
@@ -100,7 +100,8 @@ requests_log = []
 @app.route("/leak", host=ATTACKER_DOMAIN)
 def leak():
     global requests_log
-    requests_log = requests_log + [f"{request.method} {request.url}"]
+    if("newmail" in  request.url):
+        requests_log = requests_log + [f"{request.method} {request.url}"]
     return render_template("leak.j2", requests_log=requests_log)
 
 
