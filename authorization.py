@@ -19,14 +19,16 @@ class MissingCSRFToken(Exception):
 class AuthorizationHelper:
 
     @staticmethod
-    def validate(with_token):
+    def validate_session():
         if "current_user" not in session:
             raise Unauthorized
 
-        csrf_token = request.form["csrf"]
-        if with_token and csrf_token not in CSRF_TOKENS:
+    @staticmethod
+    def validate_token():
+        token = request.form["csrf"]
+        if token is None or token not in CSRF_TOKENS:
             raise MissingCSRFToken
-        CSRF_TOKENS.remove(csrf_token)
+        CSRF_TOKENS.remove(token)
 
     @staticmethod
     def generate_token():

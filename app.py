@@ -39,14 +39,15 @@ def index():
 
 @app.route("/blog/<blog_id>", methods=["GET"], host=VULNERABLE_DOMAIN)
 def check_blog(blog_id):
-    #AuthorizationHelper.validate(False)
+    AuthorizationHelper.validate_session()
     selected_blog = blog_repository.get_by_id(blog_id)
     return render_template("blog.j2", csrf_token=AuthorizationHelper.generate_token(), blog=selected_blog)
 
 
 @app.route("/blog/<blog_id>/comment", methods=["POST"], host=VULNERABLE_DOMAIN)
 def post_comment(blog_id):
-    AuthorizationHelper.validate(True)
+    AuthorizationHelper.validate_session()
+    AuthorizationHelper.validate_token()
     new_comment = request.form["comment"]
     blog_repository.post_comment_on_blog(blog_id, new_comment)
     return redirect(url_for('check_blog', blog_id=blog_id))
@@ -61,16 +62,16 @@ def login():
 
 @app.route("/profile/update-email", methods=["POST"], host=VULNERABLE_DOMAIN)
 def change_email():
-    AuthorizationHelper.validate(True)
+    AuthorizationHelper.validate_session()
+    AuthorizationHelper.validate_token()
     get_current_user().change_email(request.form)
     return render_template("profile.j2", user=get_current_user())
 
 
 @app.route("/profile", methods=["GET"], host=VULNERABLE_DOMAIN)
 def profile():
-    #AuthorizationHelper.validate(False)
+    AuthorizationHelper.validate_session()
     return render_template("profile.j2", user=get_current_user())
-
 
 
 @app.route("/login", methods=["POST"], host=VULNERABLE_DOMAIN)
