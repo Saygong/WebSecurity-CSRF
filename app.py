@@ -52,7 +52,7 @@ def post_comment(blog_id):
 def login():
     try:
         AuthorizationHelper.validate_session()
-        redirect(url_for("index"))
+        return redirect(url_for("index"))
     except Unauthorized:
         return render_template("login.j2")
 
@@ -64,7 +64,7 @@ def change_email():
 
     current_user = user_repository.get_user(session)
     current_user.change_email(request.form["email"])
-    return render_template("profile.j2", user=current_user)
+    return {}
 
 
 @app.route("/profile", methods=["GET"], host=VULNERABLE_DOMAIN)
