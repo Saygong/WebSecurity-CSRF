@@ -6,7 +6,7 @@ from flask import (
     request,
     send_from_directory,
     session,
-    url_for,
+    url_for, make_response,
 )
 
 from authorization import AuthorizationHelper, Unauthorized
@@ -36,7 +36,11 @@ def index():
 def check_blog(blog_id):
     AuthorizationHelper.validate_session()
     selected_blog = blog_repository.get_by_id(blog_id)
-    return render_template("blog.j2", csrf_token=AuthorizationHelper.generate_token(), blog=selected_blog)
+
+    html = render_template("blog.j2", csrf_token=AuthorizationHelper.generate_token(), blog=selected_blog)
+    r = make_response(html)
+    r.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return r
 
 
 @app.route("/blog/<blog_id>/comment", methods=["POST"], host=VULNERABLE_DOMAIN)
@@ -100,7 +104,7 @@ requests_log = []
 @app.route("/leak", host=ATTACKER_DOMAIN)
 def leak():
     global requests_log
-    if("newmail" in  request.url):
+    if "newmail" in request.url:
         requests_log = requests_log + [f"{request.method} {request.url}"]
     return render_template("leak.j2", requests_log=requests_log)
 
