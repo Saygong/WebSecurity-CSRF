@@ -6,12 +6,11 @@ from flask import (
     request,
     send_from_directory,
     session,
-    url_for, make_response,
-)
-
+    url_for, )
+from flask_wtf.csrf import CSRFProtect
 from authorization import AuthorizationHelper, Unauthorized
-from user import user_repository
 from blog import blog_repository
+from user import user_repository
 
 VULNERABLE_DOMAIN = "www.vulnerable.com:5000"
 ATTACKER_DOMAIN = "www.attacker.com:5000"
@@ -19,7 +18,9 @@ POSTS = []
 
 app = Flask(__name__, host_matching=True, static_host=VULNERABLE_DOMAIN)
 app.secret_key = "impossible_to_guess"
+app.config["WTF_CSRF_SECRET_KEY"] = "wtf_impossible_to_guess"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
+csrf = CSRFProtect(app)
 
 
 @app.context_processor
@@ -36,17 +37,12 @@ def index():
 def check_blog(blog_id):
     AuthorizationHelper.validate_session()
     selected_blog = blog_repository.get_by_id(blog_id)
-
-    html = render_template("blog.j2", csrf_token=AuthorizationHelper.generate_token(), blog=selected_blog)
-    r = make_response(html)
-    r.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    return r
+    return render_template("blog.j2", blog=selected_blog)
 
 
 @app.route("/blog/<blog_id>/comment", methods=["POST"], host=VULNERABLE_DOMAIN)
 def post_comment(blog_id):
     AuthorizationHelper.validate_session()
-    AuthorizationHelper.validate_token()
     new_comment = request.form["comment"]
     blog_repository.post_comment_on_blog(blog_id, new_comment)
     return redirect(url_for('check_blog', blog_id=blog_id))
@@ -64,8 +60,6 @@ def login():
 @app.route("/profile/update-email", methods=["POST"], host=VULNERABLE_DOMAIN)
 def change_email():
     AuthorizationHelper.validate_session()
-    AuthorizationHelper.validate_token()
-
     current_user = user_repository.get_user(session)
     current_user.change_email(request.form["email"])
     return {"status": 200}

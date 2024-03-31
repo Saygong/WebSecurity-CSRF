@@ -21,8 +21,7 @@
       <hr>
       <div>
 			<form action="{{ url_for('post_comment', blog_id=blog.id) }}" method="POST">
-				<input required="" type="hidden" name="csrf" value="{{ csrf_token }}">
-				
+				<input required="" type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label>Your Name:</label><br>
 				<input required="" type="text" name="name">
         <br>
