@@ -8,6 +8,7 @@
 {% block content %}
   <form action="{{ url_for("login_post") }}" method="post">
     <div class="form-group">
+      <input required="" type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label for="username">Username:</label>
       <input type="text"
              class="form-control"
